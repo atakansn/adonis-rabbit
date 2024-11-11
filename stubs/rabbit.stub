@@ -1,0 +1,19 @@
+{{{
+  exports({ to: app.configPath('rabbit.ts') })
+}}}
+import env from '#start/env'
+import { RabbitConfig } from 'adonis-rabbit/types'
+
+const rabbitConfig: RabbitConfig = {
+  hostname: env.get('RABBITMQ_HOSTNAME', 'localhost'),
+
+  port: env.get('RABBITMQ_PORT'),
+
+  protocol: env.get('RABBITMQ_PROTOCOL'),
+
+  user: env.get('RABBITMQ_USER'),
+
+  password: env.get('RABBITMQ_PASSWORD'),
+}
+
+export default rabbitConfig
