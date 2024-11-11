@@ -1,5 +1,9 @@
 # adonis-rabbit
 
+>This package has been adapted from the original version written for AdonisJS 5 and made compatible with AdonisJS 6.
+
+> If you are using AdonisJS 5, you can find the AdonisJS 5 version for this [package here](https://github.com/jotaajunior/adonis-rabbit).
+
 `adonis-rabbit` is a RabbitMQ provider for [Adonis](https://github.com/adonisjs/core).
 
 ## Getting Started
@@ -7,13 +11,21 @@
 Instal `adonis-rabbit`:
 
 ```
-yarn add adonis-rabbit
+node ace add adonis-rabbit
+```
+
+Or: 
+
+```
+npm i adonis-rabbit
 ```
 
 Then:
 
+>!! No need if you installed with `node ace add` !!
+
 ```
-node ace invoke adonis-rabbit
+node ace configure adonis-rabbit
 ```
 
 This will create `config/rabbit.ts` and add the following fields to your `.env`:
@@ -23,7 +35,7 @@ RABBITMQ_HOSTNAME=
 RABBITMQ_USER=
 RABBOTMQ_PASSWORD=
 RABBITMQ_PORT=
-RABBITMQ_PROTOCOL= "amqp://" //or ampqs 
+RABBITMQ_PROTOCOL= "amqp" //or ampqs 
 ```
 
 Make sure to set the correct values to the enviroment variables so `adonis-rabbit` can connect.
@@ -33,15 +45,15 @@ Make sure to set the correct values to the enviroment variables so `adonis-rabbi
 ### Sending messages to an queue
 
 ```ts
-import Rabbit from '@ioc:Adonis/Addons/Rabbit'
-import Route from '@ioc:Adonis/Core/Route'
+import rabbit from 'adonis-rabbit/services/rabbit'
+import router from '@adonisjs/core/services/router'
 
-Route.get('/', async () => {
+router.get('/', async () => {
   // Ensures the queue exists
-  await Rabbit.assertQueue('my_queue')
+  await rabbit.assertQueue('my_queue')
 
   // Sends a message to the queue
-  await Rabbit.sendToQueue('my_queue', 'This message was sent by adonis-rabbit')
+  await rabbit.sendToQueue('my_queue', 'This message was sent by adonis-rabbit')
 })
 ```
 
@@ -51,7 +63,7 @@ Notice doesn't really makes sense to subscribe to an queue inside a controller, 
 
 ### Creating a preload file
 
-1. In the CLI, type: `node ace make:prldfile rabbit`
+1. In the CLI, type: `node ace make:preload rabbit`
 2. Select `( ) During HTTP server`
 
 This is will create `start/rabbit.ts`.
@@ -61,12 +73,12 @@ This is will create `start/rabbit.ts`.
 Inside `start/rabbit.ts`:
 
 ```ts
-import Rabbit from '@ioc:Adonis/Addons/Rabbit'
+import rabbit from 'adonis-rabbit/services/rabbit'
 
 async function listen() {
-  await Rabbit.assertQueue('my_queue')
+  await rabbit.assertQueue('my_queue')
 
-  await Rabbit.consumeFrom('my_queue', (message) => {
+  await rabbit.consumeFrom('my_queue', (message) => {
     console.log(message.content)
   })
 }
@@ -78,18 +90,32 @@ This will log every message sent to my queue `my_queue`.
 
 ## Documentation
 
+### Integrating with the AdonisJS Service Container
+`adonis-rabbit` is seamlessly integrated with AdonisJS's service container, enabling the Adonis service to utilize rabbit throughout your application via dependency injection.
+
+### Accessing via the Service Container
+For instance, you can access rabbit within a controller or service file as follows:
+
+```ts
+import app from '@adonisjs/core/services/app'
+
+const rabbit = await app.container.make('rabbit')
+
+// => Instance of RabbitManager {}
+```
+
 ### RabbitMQ Manager
 
 #### Import
 
 ```ts
-import Rabbit from '@ioc:Adonis/Addons/Rabbit'
+import rabbit from 'adonis-rabbit/services/rabbit'
 ```
 
 #### `assertQueue()`
 
 ```ts
-await Rabbit.assertQueue('myQueue')
+await rabbit.assertQueue('myQueue')
 ```
 
 Assert the queue is created.
@@ -102,7 +128,7 @@ Parameters:
 #### `assertExchange()`
 
 ```ts
-await Rabbit.assertExchange('myQueue', 'type')
+await rabbit.assertExchange('myQueue', 'type')
 ```
 
 Assert the exchange is created.
@@ -116,7 +142,7 @@ Parameters:
 #### `bindQueue()`
 
 ```ts
-await Rabbit.bindQueue('myQueue', 'myExchange', '')
+await rabbit.bindQueue('myQueue', 'myExchange', '')
 ```
 
 Binds a queue and an exchange
@@ -129,7 +155,7 @@ Binds a queue and an exchange
 #### `sendToQueue()`
 
 ```ts
-await Rabbit.sendToQueue('myQueue', 'content')
+await rabbit.sendToQueue('myQueue', 'content')
 ```
 
 Parameters:
@@ -145,7 +171,7 @@ You also don't have to `JSON.stringify` an object, Adonis RabbitMQ will also do 
 #### `sendToExchange()`
 
 ```ts
-await Rabbit.sendToExchange('myExchange', 'myRoutingKey', 'content')
+await rabbit.sendToExchange('myExchange', 'myRoutingKey', 'content')
 ```
 
 Parameters:
@@ -162,7 +188,7 @@ You also don't have to `JSON.stringify` an object, Adonis RabbitMQ will also do 
 #### `consumeFrom()`
 
 ```ts
-await Rabbit.consumeFrom('myQueue', (message) => {
+await rabbit.consumeFrom('myQueue', (message) => {
   console.log(message.content)
   message.ack()
 })
@@ -178,7 +204,7 @@ The `onMessage` callback receives a <a href="#message">`Message`</a> instance as
 #### `await ackAll()`
 
 ```ts
-await Rabbit.ackAll()
+await rabbit.ackAll()
 ```
 
 Acknowledges all the messages.
@@ -186,7 +212,7 @@ Acknowledges all the messages.
 #### `await nackAll()`
 
 ```ts
-await Rabbit.nackAll()
+await rabbit.nackAll()
 ```
 
 Rejects all the messages.
@@ -200,7 +226,7 @@ Parameters:
 Retrieves the amqplib's Connection instance. If there`s not a connection, it'll be created.
 
 ```ts
-await Rabbit.getConnection()
+await rabbit.getConnection()
 ```
 
 #### `getConnection()`
@@ -208,7 +234,7 @@ await Rabbit.getConnection()
 Retrieves the amqplib's Connection instance. If there`s not a connection, it'll be created.
 
 ```ts
-await Rabbit.getConnection()
+await rabbit.getConnection()
 ```
 
 #### `getChannel()`
@@ -216,7 +242,7 @@ await Rabbit.getConnection()
 Retrieves the amqplib's Channel instance. If there's not a connection, it'll be created. If there`s not a channel, it'll be created too.
 
 ```ts
-await Rabbit.getChannel()
+await rabbit.getChannel()
 ```
 
 #### `closeChannel()`
@@ -236,7 +262,7 @@ When consuming messages through [`consumeFrom`](https://github.com/jotaajunior/a
 This slightly different from amqplib approach. For example:
 
 ```ts
-Rabbit.consumeFrom('queue', (message) => {
+rabbit.consumeFrom('queue', (message) => {
   // Acknowledges the message
   message.ack()
 
