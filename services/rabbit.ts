@@ -1,5 +1,5 @@
 import app from '@adonisjs/core/services/app'
-import type { RabbitManagerContract } from '../src/types/index.js'
+import { RabbitManagerContract } from '../src/types/index.js'
 
 let rabbit: RabbitManagerContract
 
