@@ -16,8 +16,8 @@
   ],
   "exports": {
     "./types/*": "./build/src/types/*.js",
-    "./providers/*": "./build/src/providers/*.js",
-    "./services/*": "./build/src/services/*.js"
+    "./providers/*": "./build/providers/*.js",
+    "./services/*": "./build/services/*.js"
   },
   "eslintConfig": {
     "extends": "@adonisjs/eslint-config/package"
