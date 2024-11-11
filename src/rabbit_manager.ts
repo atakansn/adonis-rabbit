@@ -1,12 +1,8 @@
-import { Channel, Options } from 'amqplib'
-import {
-  MessageContract,
-  RabbitConfig,
-  RabbitManagerContract,
-} from '@ioc:Adonis/Addons/Rabbit'
-import RabbitConnection from '../RabbitConnection'
-import Message from '../Messsage'
-import safeStringify from '../Utils/safeStringify'
+import { Channel, ConsumeMessage, Options } from 'amqplib'
+import { MessageContract, RabbitConfig, RabbitManagerContract } from './types/index.js'
+import RabbitConnection from './rabbit_connection.js'
+import Message from './message.js'
+import { safeStringify } from './utils/index.js'
 
 export default class RabbitManager implements RabbitManagerContract {
   /**
@@ -17,13 +13,13 @@ export default class RabbitManager implements RabbitManagerContract {
   /**
    * If the channel has been established
    */
-  public hasChannel: boolean = false
+  hasChannel: boolean = false
 
   /**
    * The channel
    */
-  private $channelPromise: Promise<Channel>
-  private $channel: Channel
+  private $channelPromise: Promise<Channel> | undefined
+  private $channel: Channel | undefined
 
   constructor(rabbitConfig: RabbitConfig) {
     this.rabbitConnection = new RabbitConnection(rabbitConfig)
@@ -37,28 +33,25 @@ export default class RabbitManager implements RabbitManagerContract {
   private toBuffer(content: any) {
     return Buffer.isBuffer(content)
       ? content
-      : Buffer.from(
-          typeof content === 'object' ? safeStringify(content) : content
-        )
+      : Buffer.from(typeof content === 'object' ? safeStringify(content) : content)
   }
 
   /**
    * Returns the connection
    */
-  public async getConnection() {
+  async getConnection() {
     return this.rabbitConnection.getConnection()
   }
 
   /**
    * Returns the channel
    */
-  public async getChannel() {
+  async getChannel() {
     const connection = await this.rabbitConnection.getConnection()
 
     if (!this.hasChannel || !this.$channel) {
       if (!this.$channelPromise) {
-        this.$channelPromise =
-          connection.createChannel() as unknown as Promise<Channel>
+        this.$channelPromise = connection.createChannel() as unknown as Promise<Channel>
       }
       this.$channel = await this.$channelPromise
       this.hasChannel = true
@@ -73,7 +66,7 @@ export default class RabbitManager implements RabbitManagerContract {
    * @param queueName The name of the queue
    * @param options The options
    */
-  public async assertQueue(queueName: string, options?: Options.AssertQueue) {
+  async assertQueue(queueName: string, options?: Options.AssertQueue) {
     const channel = await this.getChannel()
 
     return channel.assertQueue(queueName, options)
@@ -86,11 +79,7 @@ export default class RabbitManager implements RabbitManagerContract {
    * @param content The content
    * @param options The options
    */
-  public async sendToQueue(
-    queueName: string,
-    content: any,
-    options?: Options.Publish
-  ) {
+  async sendToQueue(queueName: string, content: any, options?: Options.Publish) {
     const channel = await this.getChannel()
 
     return channel.sendToQueue(queueName, this.toBuffer(content), options)
@@ -101,13 +90,9 @@ export default class RabbitManager implements RabbitManagerContract {
    *
    * @param exchangeName The exchange name
    * @param type The exchange type
-   * @param content The content
+   * @param options The content
    */
-  public async assertExchange(
-    exchangeName: string,
-    type: string,
-    options?: Options.AssertExchange
-  ) {
+  async assertExchange(exchangeName: string, type: string, options?: Options.AssertExchange) {
     const channel = await this.getChannel()
 
     return channel.assertExchange(exchangeName, type, options)
@@ -120,11 +105,7 @@ export default class RabbitManager implements RabbitManagerContract {
    * @param exchangeName The exchange name
    * @param pattern The pattern
    */
-  public async bindQueue(
-    queueName: string,
-    exchangeName: string,
-    pattern = ''
-  ) {
+  public async bindQueue(queueName: string, exchangeName: string, pattern = '') {
     const channel = await this.getChannel()
 
     return channel.bindQueue(queueName, exchangeName, pattern)
@@ -137,11 +118,7 @@ export default class RabbitManager implements RabbitManagerContract {
    * @param routingKey A routing key
    * @param content The content
    */
-  public async sendToExchange(
-    exchangeName: string,
-    routingKey: string,
-    content: any
-  ) {
+  async sendToExchange(exchangeName: string, routingKey: string, content: any) {
     const channel = await this.getChannel()
 
     return channel.publish(exchangeName, routingKey, this.toBuffer(content))
@@ -150,7 +127,7 @@ export default class RabbitManager implements RabbitManagerContract {
   /**
    * Acknowledges all messages
    */
-  public async ackAll() {
+  async ackAll() {
     const channel = await this.getChannel()
 
     return channel.ackAll()
@@ -161,7 +138,7 @@ export default class RabbitManager implements RabbitManagerContract {
    *
    * @param requeue Adds back to the queue
    */
-  public async nackAll(requeue: boolean) {
+  async nackAll(requeue: boolean) {
     const channel = await this.getChannel()
 
     return channel.nackAll(requeue)
@@ -173,14 +150,14 @@ export default class RabbitManager implements RabbitManagerContract {
    * @param queueName The queue name
    * @param onMessage The listener
    */
-  public async consumeFrom<T extends object = any>(
+  async consumeFrom<T extends object = any>(
     queueName: string,
     onMessage: (msg: MessageContract<T>) => void | Promise<void>
   ) {
     const channel = await this.getChannel()
 
     return channel.consume(queueName, (message) => {
-      const messageInstance = new Message<T>(channel, message)
+      const messageInstance = new Message<T>(channel, message as ConsumeMessage)
       onMessage(messageInstance)
     })
   }
@@ -188,7 +165,7 @@ export default class RabbitManager implements RabbitManagerContract {
   /**
    * Closes the channel
    */
-  public async closeChannel() {
+  async closeChannel() {
     if (this.hasChannel && this.$channel) {
       await this.$channel.close()
       this.hasChannel = false
@@ -198,7 +175,7 @@ export default class RabbitManager implements RabbitManagerContract {
   /**
    * Closes the connection
    */
-  public async closeConnection() {
+  async closeConnection() {
     await this.rabbitConnection.closeConnection()
   }
 }

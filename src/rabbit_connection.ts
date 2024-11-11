@@ -1,18 +1,18 @@
 import { connect, Connection } from 'amqplib'
-import { RabbitConfig } from '@ioc:Adonis/Addons/Rabbit'
-import InvalidRabbitConfigException from '../Exceptions/InvalidRabbitConfigException'
+import { RabbitConfig } from './types/index.js'
+import InvalidRabbitConfigException from './exceptions/invalid_rabbit_config_exception.js'
 
 export default class RabbitConnection {
   /**
    * Whether the connection has already been established
    */
-  public hasConnection: boolean = false
+  hasConnection: boolean = false
 
   /**
    * The connection
    */
-  private $connection: Connection
-  private $connectionPromise: Promise<Connection>
+  private $connection: Connection | undefined
+  private $connectionPromise: Promise<Connection> | undefined
 
   /**
    * The credentials
@@ -30,20 +30,11 @@ export default class RabbitConnection {
   private readonly $protocol: string
 
   constructor(private readonly rabbitConfig: RabbitConfig) {
-    this.$credentials = this.handleCredentials(
-      this.rabbitConfig.user,
-      this.rabbitConfig.password
-    )
+    this.$credentials = this.handleCredentials(this.rabbitConfig.user, this.rabbitConfig.password)
 
-    this.$hostname = this.handleHostname(
-      this.rabbitConfig.hostname,
-      this.rabbitConfig.port
-    )
+    this.$hostname = this.handleHostname(this.rabbitConfig.hostname, this.rabbitConfig.port)
 
-    this.$hostname = this.handleHostname(
-      this.rabbitConfig.hostname,
-      this.rabbitConfig.port
-    )
+    this.$hostname = this.handleHostname(this.rabbitConfig.hostname, this.rabbitConfig.port)
 
     this.$protocol = this.handleProtocol(this.rabbitConfig.protocol)
   }
@@ -54,10 +45,7 @@ export default class RabbitConnection {
    * @param user The username
    * @param password The password
    */
-  private handleCredentials(
-    user: RabbitConfig['user'],
-    password: RabbitConfig['password']
-  ) {
+  private handleCredentials(user: RabbitConfig['user'], password: RabbitConfig['password']) {
     if (!user) {
       throw new InvalidRabbitConfigException('Missing RabbitMQ user')
     }
@@ -75,10 +63,7 @@ export default class RabbitConnection {
    * @param hostname The hostname
    * @param port The port
    */
-  private handleHostname(
-    hostname: RabbitConfig['hostname'],
-    port?: RabbitConfig['port']
-  ) {
+  private handleHostname(hostname: RabbitConfig['hostname'], port?: RabbitConfig['port']) {
     if (!hostname) {
       throw new InvalidRabbitConfigException('Missing RabbitMQ hostname')
     }
@@ -96,25 +81,23 @@ export default class RabbitConnection {
       protocol = 'amqp://'
     }
 
-    return protocol
+    return `${protocol}://`
   }
 
   /**
    * Returns the connection URL
    */
-  public get url() {
+  get url() {
     return [this.$protocol, this.$credentials, this.$hostname].join('')
   }
 
   /**
    * Returns the connection
    */
-  public async getConnection() {
+  async getConnection() {
     if (!this.$connection) {
       if (!this.$connectionPromise) {
-        this.$connectionPromise = connect(
-          this.url
-        ) as unknown as Promise<Connection>
+        this.$connectionPromise = connect(this.url) as unknown as Promise<Connection>
       }
       this.$connection = await this.$connectionPromise
     }
@@ -125,9 +108,9 @@ export default class RabbitConnection {
   /**
    * Closes the connection
    */
-  public async closeConnection() {
+  async closeConnection() {
     if (this.hasConnection) {
-      await this.$connection.close()
+      await this.$connection!.close()
       this.hasConnection = false
     }
   }
