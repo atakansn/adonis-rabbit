@@ -2,7 +2,7 @@ version: "3"
 
 services:
   rabbitmq:
-    image: "rabbitmq:3.8-management-alpine"
+    image: "rabbitmq:4-alpine"
     container_name: adonis_rabbitmq
     hostname: rabbitmq
     ports:
@@ -11,5 +11,5 @@ services:
     volumes:
       - "./.rabbitmq_data:/var/lib/rabbitmq/mnesia"
     environment:
-      - RABBITMQ_DEFAULT_USER=admin
-      - RABBITMQ_DEFAULT_PASS=admin
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
