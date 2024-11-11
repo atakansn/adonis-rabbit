@@ -105,7 +105,7 @@ export default class RabbitManager implements RabbitManagerContract {
    * @param exchangeName The exchange name
    * @param pattern The pattern
    */
-  public async bindQueue(queueName: string, exchangeName: string, pattern = '') {
+  async bindQueue(queueName: string, exchangeName: string, pattern = '') {
     const channel = await this.getChannel()
 
     return channel.bindQueue(queueName, exchangeName, pattern)
