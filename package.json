@@ -1,61 +1,66 @@
 {
   "name": "adonis-rabbit",
   "description": "AdonisJS RabbitMQ provider",
-  "version": "0.1.1",
+  "version": "0.3.0",
   "author": "Jota Júnior <jjunior@protonmail.ch>",
-  "types": "build/adonis-typings/index.d.ts",
-  "main": "build/providers/RabbitProvider.js",
+  "main": "build/index.js",
+  "type": "module",
   "license": "MIT",
+  "repository": "https://github.com/jotaajunior/adonis-rabbit.git#readme",
+  "prettier": "@adonisjs/prettier-config",
+  "engines": {
+    "node": ">=20.6.0"
+  },
   "files": [
-    "build/adonis-typings",
-    "build/providers",
-    "build/templates",
-    "build/src",
-    "build/standalone.js",
-    "build/standalone.d.ts"
+    "build"
   ],
+  "exports": {
+    "./types/*": "./build/src/types/*.js",
+    "./providers/*": "./build/src/providers/*.js",
+    "./services/*": "./build/src/services/*.js"
+  },
+  "eslintConfig": {
+    "extends": "@adonisjs/eslint-config/package"
+  },
   "scripts": {
-    "build": "npm run copyfiles && tsc",
-    "copyfiles": "copyfiles \"templates/**/*.txt\" build",
-    "lint": "eslint . --ext=.ts --fix"
+    "clean": "del-cli build",
+    "copy:templates": "copyfiles \"stubs/**/*.stub\" build",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --ext=.ts",
+    "format": "prettier --write .",
+    "prebuild": "npm run lint && npm run clean",
+    "build": "tsc",
+    "postbuild": "npm run copy:templates",
+    "release": "np",
+    "version": "npm run build",
+    "prepublishOnly": "npm run build"
   },
   "devDependencies": {
-    "@adonisjs/core": "^5.1.8",
-    "adonis-preset-ts": "^1.0.4",
-    "copyfiles": "^2.4.0",
-    "eslint": "^7.11.0",
-    "eslint-plugin-adonis": "^1.0.15",
-    "eslint-plugin-prettier": "^3.4.0",
-    "np": "^7.5.0",
-    "prettier": "^2.3.1",
-    "typescript": "^4.0.3"
+    "@adonisjs/assembler": "^7.7.0",
+    "@adonisjs/core": "^6.12.0",
+    "@adonisjs/eslint-config": "^1.3.0",
+    "@adonisjs/prettier-config": "^1.3.0",
+    "@adonisjs/tsconfig": "^1.3.0",
+    "@swc/core": "^1.6.3",
+    "@types/node": "^20.14.5",
+    "c8": "^10.1.2",
+    "copyfiles": "^2.4.1",
+    "del-cli": "^5.1.0",
+    "eslint": "^8.57.0",
+    "np": "^10.0.6",
+    "prettier": "^3.3.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
+  },
+  "peerDependencies": {
+    "@adonisjs/core": "^6.2.0"
   },
   "dependencies": {
-    "@types/amqplib": "^0.5.14",
-    "amqplib": "^0.6.0",
-    "fast-safe-stringify": "^2.0.7"
-  },
-  "adonisjs": {
-    "templates": {
-      "config": {
-        "src": "rabbit.txt",
-        "dest": "rabbit"
-      }
-    },
-    "env": {
-      "RABBITMQ_HOSTNAME": "localhost",
-      "RABBITMQ_USER": "",
-      "RABBITMQ_PASSWORD": "",
-      "RABBITMQ_PORT": "",
-      "RABIITMQ_PROTOCOL": "ampq://"
-    },
-    "types": "adonis-rabbit",
-    "providers": [
-      "adonis-rabbit"
-    ]
+    "@types/amqplib": "^0.10.5",
+    "amqplib": "^0.10.4",
+    "fast-safe-stringify": "^2.1.1"
   },
   "np": {
     "message": "Releases v%s"
-  },
-  "repository": "https://github.com/jotaajunior/adonis-rabbit.git"
+  }
 }
